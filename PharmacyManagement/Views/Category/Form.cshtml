@@ -1,0 +1,37 @@
+@model PharmacyManagement.Models.ViewModels.Category.CategoryCreateEditViewModel
+
+@{
+    bool isEdit = Model.CategoryId > 0;
+    ViewData["Title"] = isEdit ? "Edit Category" : "Add Category";
+}
+
+<div class="container-fluid px-4">
+    <h1 class="mt-4">@ViewData["Title"]</h1>
+    <div class="card mb-4">
+        <div class="card-body">
+            <form asp-action="@(isEdit ? "Edit" : "Create")" method="post">
+                <input type="hidden" asp-for="CategoryId" />
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <div class="mb-3">
+                    <label asp-for="Name" class="form-label"></label>
+                    <input asp-for="Name" class="form-control" maxlength="100" placeholder="e.g. Pain Relief &amp; Fever" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Description" class="form-label"></label>
+                    <textarea asp-for="Description" class="form-control" rows="3" maxlength="500"></textarea>
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+
+                <button type="submit" class="btn btn-primary">@(isEdit ? "Update" : "Save")</button>
+                <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

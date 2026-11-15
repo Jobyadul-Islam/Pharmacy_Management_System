@@ -1,0 +1,229 @@
+﻿@model IEnumerable<PharmacyManagement.Models.ViewModels.Purchase.PurchaseViewModel>
+@inject PharmacyManagement.Services.CartService Cart
+
+@{
+    ViewData["Title"] = "My Purchases";
+    var orders = Model?.ToList() ?? new List<PharmacyManagement.Models.ViewModels.Purchase.PurchaseViewModel>();
+    var totalSpent = orders.Sum(o => o.TotalAmount);
+    var totalItems = orders.Sum(o => o.PurchaseItems.Sum(i => i.Quantity));
+}
+
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <h2 class="fw-bold mb-0">My Purchases</h2>
+    <div class="d-flex gap-2">
+        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-primary rounded-pill">Continue Shopping</a>
+        <a asp-controller="Cart" asp-action="Index" class="btn btn-success rounded-pill">View Cart (@Cart.GetTotalQuantity())</a>
+    </div>
+</div>
+<p class="text-muted mb-4">Orders you have already placed. To buy something new, add it to your cart from the Shop.</p>
+
+@if (TempData["PurchaseMessage"] is string purchaseMessage)
+{
+    <div class="alert alert-success">@purchaseMessage</div>
+}
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0 rounded-4 h-100">
+            <div class="card-body p-4">
+                <div class="text-muted small">Orders</div>
+                <div class="fs-3 fw-bold">@orders.Count</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0 rounded-4 h-100">
+            <div class="card-body p-4">
+                <div class="text-muted small">Medicines Bought</div>
+                <div class="fs-3 fw-bold">@totalItems</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0 rounded-4 h-100">
+            <div class="card-body p-4">
+                <div class="text-muted small">Total Spent</div>
+                <div class="fs-3 fw-bold text-success">BDT @totalSpent.ToString("0.00")</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 rounded-4">
+    <div class="card-body p-4">
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Items</th>
+                        <th>Total Amount</th>
+                        <th>Payment Method</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        @foreach (var purchase in Model)
+                        {
+                            <tr>
+                                <td class="fw-bold">#@purchase.PurchaseId</td>
+                                <td>
+                                    @foreach (var item in purchase.PurchaseItems)
+                                    {
+                                        <div class="small">@item.MedicineName &times; @item.Quantity</div>
+                                    }
+                                </td>
+                                <td class="fw-bold">BDT @purchase.TotalAmount.ToString("0.00")</td>
+                                <td>@purchase.PaymentMethod</td>
+                                <td>
+                                    @* Read-only for customers; the pharmacy (admin) marks orders as completed. *@
+                                    @if (purchase.Status?.Equals("Completed", StringComparison.OrdinalIgnoreCase) == true)
+                                    {
+                                        <span class="badge bg-success">Completed</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning text-dark" title="Your order has been placed and is being processed by the pharmacy.">@(string.IsNullOrEmpty(purchase.Status) ? "Pending" : purchase.Status)</span>
+                                    }
+                                </td>
+                                <td>@purchase.PurchaseDate.ToString("yyyy-MM-dd HH:mm")</td>
+                                <td class="text-end">
+                                    <button type="button" class="btn btn-sm btn-outline-info rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#memoModal-@purchase.PurchaseId">
+                                        <i class="bi bi-receipt me-1"></i> View Memo
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">No purchases found.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Render Modals Outside the Table to Prevent Layout Mess & Overlap -->
+@if (Model != null && Model.Any())
+{
+    @foreach (var purchase in Model)
+    {
+        <div class="modal fade" id="memoModal-@purchase.PurchaseId" tabindex="-1" aria-labelledby="memoModalLabel-@purchase.PurchaseId" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content rounded-4 border-0 shadow">
+                    <div class="modal-header bg-light">
+                        <h5 class="modal-title fw-bold" id="memoModalLabel-@purchase.PurchaseId">Order Memo / Receipt #@purchase.PurchaseId</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-5 bg-white" id="printableArea-@purchase.PurchaseId">
+                        <div class="text-center mb-4">
+                            <h3 class="fw-bold text-primary">Trex Medicine</h3>
+                            <p class="text-muted mb-0">Purchase Receipt</p>
+                        </div>
+                        <hr />
+                        <div class="row mb-4">
+                            <div class="col-sm-6">
+                                <p class="mb-1"><strong>Order ID:</strong> #@purchase.PurchaseId</p>
+                                <p class="mb-1"><strong>Date:</strong> @purchase.PurchaseDate.ToString("yyyy-MM-dd HH:mm")</p>
+                            </div>
+                            <div class="col-sm-6 text-sm-end">
+                                <p class="mb-1"><strong>Payment Method:</strong> @purchase.PaymentMethod</p>
+                                @if (!string.IsNullOrEmpty(purchase.DeliveryMethod))
+                                {
+                                    <p class="mb-1"><strong>Delivery:</strong> @purchase.DeliveryMethod</p>
+                                }
+                                <p class="mb-1"><strong>Status:</strong> <span class="badge @(purchase.Status == "Completed" ? "bg-success" : "bg-warning text-dark")">@purchase.Status</span></p>
+                            </div>
+                            @if (!string.IsNullOrEmpty(purchase.DeliveryAddress))
+                            {
+                                <div class="col-12 mt-2">
+                                    <p class="mb-1"><strong>Delivery Address:</strong> @purchase.DeliveryAddress</p>
+                                </div>
+                            }
+                        </div>
+                        <div class="table-responsive mb-4">
+                            <table class="table table-bordered align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Medicine</th>
+                                        <th class="text-end">Unit Price</th>
+                                        <th class="text-end">Qty</th>
+                                        <th class="text-end">Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in purchase.PurchaseItems)
+                                    {
+                                        <tr>
+                                            <td>@item.MedicineName</td>
+                                            <td class="text-end">BDT @item.UnitPrice.ToString("0.00")</td>
+                                            <td class="text-end">@item.Quantity</td>
+                                            <td class="text-end">BDT @item.TotalPrice.ToString("0.00")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <th colspan="3" class="text-end">Grand Total:</th>
+                                        <th class="text-end text-success">BDT @purchase.TotalAmount.ToString("0.00")</th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                        <div class="text-center text-muted small mt-5">
+                            <p class="mb-0">Thank you for your purchase! For any inquiries, please contact support.</p>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light justify-content-between">
+                        <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Close</button>
+                        <div>
+                            <button type="button" class="btn btn-outline-success rounded-pill px-3 me-2" onclick="downloadImage('@purchase.PurchaseId')">
+                                <i class="bi bi-file-earmark-image me-1"></i> Save as Image
+                            </button>
+                            <button type="button" class="btn btn-primary rounded-pill px-4" onclick="printModal('@purchase.PurchaseId')">
+                                <i class="bi bi-printer me-1"></i> Print / Save as PDF
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+}
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script>
+        function printModal(purchaseId) {
+            const printContent = document.getElementById("printableArea-" + purchaseId).innerHTML;
+            const originalBody = document.body.innerHTML;
+
+            document.body.innerHTML = `
+                        <div style="font-family: Arial, sans-serif; padding: 30px; max-width: 800px; margin: auto; background: white;">
+                            ${printContent}
+                        </div>
+                    `;
+            window.print();
+            document.body.innerHTML = originalBody;
+            window.location.reload();
+        }
+
+        function downloadImage(purchaseId) {
+            const element = document.getElementById("printableArea-" + purchaseId);
+            html2canvas(element, { scale: 2 }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `Order-Memo-${purchaseId}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        }
+    </script>
+}

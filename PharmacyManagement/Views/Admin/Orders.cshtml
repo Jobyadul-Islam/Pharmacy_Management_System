@@ -1,0 +1,97 @@
+@model List<PharmacyManagement.Models.ViewModels.Purchase.PurchaseViewModel>
+
+@{
+    ViewData["Title"] = "Orders";
+    var statusFilter = ViewBag.StatusFilter as string;
+}
+
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Orders</h1>
+
+    @if (TempData["OrderMessage"] is string orderMessage)
+    {
+        <div class="alert alert-success">@orderMessage</div>
+    }
+    @if (TempData["OrderError"] is string orderError)
+    {
+        <div class="alert alert-warning">@orderError</div>
+    }
+
+    <div class="mb-3 d-flex gap-2">
+        <a asp-action="Orders" class="btn btn-sm @(statusFilter == null ? "btn-primary" : "btn-outline-primary")">All</a>
+        <a asp-action="Orders" asp-route-status="Pending" class="btn btn-sm @(statusFilter == "Pending" ? "btn-primary" : "btn-outline-primary")">Pending</a>
+        <a asp-action="Orders" asp-route-status="Completed" class="btn btn-sm @(statusFilter == "Completed" ? "btn-primary" : "btn-outline-primary")">Completed</a>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            @if (!Model.Any())
+            {
+                <p class="text-muted mb-0">No orders found.</p>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped align-middle">
+                        <thead>
+                            <tr>
+                                <th>Order</th>
+                                <th>Customer</th>
+                                <th>Items</th>
+                                <th>Total</th>
+                                <th>Payment / Delivery</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var order in Model)
+                            {
+                                <tr>
+                                    <td class="fw-bold">#@order.PurchaseId</td>
+                                    <td>@order.CustomerName</td>
+                                    <td>
+                                        @foreach (var item in order.PurchaseItems)
+                                        {
+                                            <div class="small">@item.MedicineName &times; @item.Quantity <span class="text-muted">(BDT @item.TotalPrice.ToString("0.00"))</span></div>
+                                        }
+                                        @if (order.PrescriptionId.HasValue)
+                                        {
+                                            <span class="badge bg-info text-dark mt-1">Prescription #@order.PrescriptionId</span>
+                                        }
+                                    </td>
+                                    <td class="fw-bold">BDT @order.TotalAmount.ToString("0.00")</td>
+                                    <td class="small">
+                                        @order.PaymentMethod<br />
+                                        @order.DeliveryMethod
+                                        @if (!string.IsNullOrEmpty(order.DeliveryAddress))
+                                        {
+                                            <br /><span class="text-muted">@order.DeliveryAddress</span>
+                                        }
+                                    </td>
+                                    <td class="small">@order.PurchaseDate.ToString("yyyy-MM-dd HH:mm")</td>
+                                    <td>
+                                        @if (order.Status == "Completed")
+                                        {
+                                            <span class="badge bg-success">Completed</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning text-dark d-block mb-2">@order.Status</span>
+                                            <form asp-action="CompleteOrder" method="post"
+                                                  onsubmit="return confirm('Mark order #@order.PurchaseId as completed?');">
+                                                <input type="hidden" name="id" value="@order.PurchaseId" />
+                                                <input type="hidden" name="status" value="@statusFilter" />
+                                                <button type="submit" class="btn btn-success btn-sm">Mark Completed</button>
+                                            </form>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>

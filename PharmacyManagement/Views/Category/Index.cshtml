@@ -1,0 +1,73 @@
+@model IEnumerable<PharmacyManagement.Models.ViewModels.Category.CategoryViewModel>
+
+@{
+    ViewData["Title"] = "Manage Categories";
+}
+
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Categories</h1>
+
+    @if (TempData["CategoryMessage"] is string message)
+    {
+        <div class="alert alert-success">@message</div>
+    }
+    @if (TempData["CategoryError"] is string error)
+    {
+        <div class="alert alert-danger">@error</div>
+    }
+
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>Category List</div>
+            <a asp-action="Create" class="btn btn-primary btn-sm">Add New Category</a>
+        </div>
+        <div class="card-body">
+            @if (!Model.Any())
+            {
+                <p class="text-muted mb-0">No categories yet. Add one to start adding medicines.</p>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped align-middle">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Description</th>
+                                <th>Medicines</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td>@item.Name</td>
+                                    <td>@item.Description</td>
+                                    <td>@item.MedicineCount</td>
+                                    <td>
+                                        <div class="d-flex gap-1">
+                                            <a asp-action="Edit" asp-route-id="@item.CategoryId" class="btn btn-warning btn-sm">Edit</a>
+                                            @if (item.MedicineCount == 0)
+                                            {
+                                                <form asp-action="Delete" asp-route-id="@item.CategoryId" method="post"
+                                                      onsubmit="return confirm('Delete this category?');">
+                                                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                                </form>
+                                            }
+                                            else
+                                            {
+                                                <button type="button" class="btn btn-danger btn-sm" disabled
+                                                        title="In use by medicines - move them to another category first">Delete</button>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>

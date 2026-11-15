@@ -1,0 +1,160 @@
+﻿@model PharmacyManagement.Models.ViewModels.Cart.CheckoutViewModel
+
+@{
+    ViewData["Title"] = "Checkout";
+    var grandTotal = Model.CartItems.Sum(i => i.TotalPrice);
+    var totalQuantity = Model.CartItems.Sum(i => i.Quantity);
+}
+
+<div class="container my-4">
+    <h2>Checkout</h2>
+    <hr />
+
+    <form asp-action="ProcessCheckout" method="post" id="checkoutForm">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <div class="row">
+            <!-- Left Column: Order Items -->
+            <div class="col-md-8">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">Order Items (@totalQuantity)</h4>
+                        <a asp-controller="Cart" asp-action="Index" class="btn btn-light btn-sm rounded-pill">Edit Cart</a>
+                    </div>
+                    <div class="card-body">
+                        @* The items come from the cart on the server; nothing about them is posted by this form. *@
+                        <div class="table-responsive">
+                            <table class="table align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Medicine</th>
+                                        <th>Unit Price</th>
+                                        <th>Quantity</th>
+                                        <th class="text-end">Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.CartItems)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <strong>@item.MedicineName</strong>
+                                                @if (!string.IsNullOrEmpty(item.Strength))
+                                                {
+                                                    <span class="text-muted">(@item.Strength)</span>
+                                                }
+                                                @if (item.RequiresPrescription)
+                                                {
+                                                    <br /><span class="badge bg-info text-dark">Prescription required</span>
+                                                }
+                                                @if (item.Problem != null)
+                                                {
+                                                    <br /><small class="text-danger">@item.Problem</small>
+                                                }
+                                            </td>
+                                            <td>BDT @item.UnitPrice.ToString("0.00")</td>
+                                            <td>@item.Quantity</td>
+                                            <td class="text-end fw-bold">BDT @item.TotalPrice.ToString("0.00")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <th colspan="3" class="text-end">Grand Total</th>
+                                        <th class="text-end text-success">BDT @grandTotal.ToString("0.00")</th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Prescription Selection -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0">Attach Prescription (required for prescription-only medicines)</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label asp-for="PrescriptionId" class="form-label">Select Uploaded Prescription</label>
+                            <select asp-for="PrescriptionId" asp-items="Model.Prescriptions" class="form-select">
+                                <option value="">-- None --</option>
+                            </select>
+                            <span asp-validation-for="PrescriptionId" class="text-danger"></span>
+                            <small class="text-muted d-block mt-1">
+                                Don't have one uploaded? <a asp-action="UploadPrescription" target="_blank">Upload a prescription</a> (opens in a new tab, then reload this page).
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Payment, Delivery & Total -->
+            <div class="col-md-4">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h4 class="mb-0">Payment & Delivery</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label asp-for="PaymentMethod" class="form-label">Payment Method</label>
+                            <select asp-for="PaymentMethod" class="form-select">
+                                <option value="CashOnDelivery">Cash on Delivery</option>
+                                <option value="CreditCard">Credit Card</option>
+                                <option value="OnlineBanking">Online Banking</option>
+                            </select>
+                            <span asp-validation-for="PaymentMethod" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="DeliveryMethod" class="form-label">Delivery Method</label>
+                            <select asp-for="DeliveryMethod" id="DeliveryMethod" class="form-select">
+                                <option value="HomeDelivery">Home Delivery</option>
+                                <option value="StorePickup">Store Pickup</option>
+                            </select>
+                            <span asp-validation-for="DeliveryMethod" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3" id="addressContainer">
+                            <label asp-for="DeliveryAddress" class="form-label">Delivery Address</label>
+                            <textarea asp-for="DeliveryAddress" class="form-control" rows="3" maxlength="300" placeholder="Enter full delivery address..."></textarea>
+                            <span asp-validation-for="DeliveryAddress" class="text-danger"></span>
+                        </div>
+
+                        <hr />
+
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">Items</span>
+                            <span>@totalQuantity</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <h5 class="fw-bold">Grand Total:</h5>
+                            <h5 class="fw-bold text-success">BDT @grandTotal.ToString("0.00")</h5>
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100 py-2">Place Order</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <script>
+        // Hide the address box for store pickup.
+        document.addEventListener("DOMContentLoaded", function () {
+            const deliveryMethodSelect = document.getElementById("DeliveryMethod");
+            const addressContainer = document.getElementById("addressContainer");
+
+            function toggleAddressVisibility() {
+                addressContainer.style.display = deliveryMethodSelect.value === "StorePickup" ? "none" : "block";
+            }
+
+            deliveryMethodSelect.addEventListener("change", toggleAddressVisibility);
+            toggleAddressVisibility();
+        });
+    </script>
+}

@@ -1,0 +1,238 @@
+﻿@model PharmacyManagement.Models.ViewModels.Admin.AdminDashboardViewModel
+
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Admin Dashboard</h1>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-6 col-xl-4 mb-3">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Customers</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.TotalCustomers</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-xl-4 mb-3">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Total Stock Quantity</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.TotalMedicinesStock</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-pills fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customers & Sales Data Tables -->
+    <div class="row">
+        <!-- Customers Table Card -->
+        <div class="col-lg-12 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Registered Customers</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle" width="100%" cellspacing="0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Total Items Bought</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.Customers != null && Model.Customers.Any())
+                                {
+                                    @foreach (var customer in Model.Customers)
+                                    {
+                                        <tr>
+                                            <td>@customer.CustomerId</td>
+                                            <td>@customer.Name</td>
+                                            <td>@customer.Email</td>
+                                            <td>@customer.Phone</td>
+                                            <td class="text-center" style="text-align: center !important;">@customer.TotalMedicinesBought</td>
+                                            <td class="text-center">
+                                                <button class="btn btn-sm btn-outline-primary me-1" onclick="loadCustomerHistory(@customer.CustomerId)">
+                                                    <i class="fas fa-history me-1"></i>History
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-danger delete-btn" data-id="@customer.CustomerId" data-name="@customer.Name">
+                                                    <i class="fas fa-trash me-1"></i>Delete
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted">No customers found.</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sales & Stocks Table Card -->
+        <div class="col-lg-12 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Sales & Stock Overview</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle" width="100%" cellspacing="0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Medicine Name</th>
+                                    <th>Units Sold</th>
+                                    <th>Units Left</th>
+                                    <th>Buy Price</th>
+                                    <th>Sell Price</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.SalesStocks != null && Model.SalesStocks.Any())
+                                {
+                                    @foreach (var item in Model.SalesStocks)
+                                    {
+                                        <tr>
+                                            <td>@item.MedicineName</td>
+                                            <td><span class="badge bg-success">@item.UnitsSold</span></td>
+                                            <td><span class="badge @(item.UnitsLeft > 0 ? "bg-primary" : "bg-danger")">@item.UnitsLeft</span></td>
+                                            <td>BDT @item.BuyPrice.ToString("N2")</td>
+                                            <td>BDT @item.SellPrice.ToString("N2")</td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted">No stock data available.</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Customer Purchase History Modal -->
+<div class="modal fade" id="customerHistoryModal" tabindex="-1" aria-labelledby="customerHistoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="customerHistoryModalLabel">Customer Purchase History</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="historyModalBody">
+                <!-- Loaded dynamically via AJAX -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="deleteCustomerForm" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteConfirmModalLabel">Confirm Delete</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to delete customer <strong id="deleteCustomerName"></strong>? This will remove all associated purchases and prescriptions.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function loadCustomerHistory(customerId) {
+            var historyModalEl = document.getElementById('customerHistoryModal');
+            var historyModal = bootstrap.Modal.getOrCreateInstance(historyModalEl);
+
+            $('#historyModalBody').html(`
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2 text-muted mb-0">Loading purchase history...</p>
+                        </div>
+                    `);
+
+            historyModal.show();
+
+            $.ajax({
+                url: '@Url.Action("CustomerPurchaseHistory", "Admin")/' + customerId,
+                type: 'GET',
+                cache: false,
+                success: function(data) {
+                    $('#historyModalBody').html(data);
+                },
+                error: function(xhr, status, error) {
+                    console.error("Server Error details:", xhr.responseText);
+                    $('#historyModalBody').html(`
+                                <div class="alert alert-danger m-3" role="alert">
+                                    Failed to load purchase history. ${xhr.responseText || 'Internal Server Error (500).'}
+                                </div>
+                            `);
+                }
+            });
+        }
+
+        $(document).on('click', '.delete-btn', function(e) {
+            e.preventDefault();
+            var customerId = $(this).data('id');
+            var customerName = $(this).data('name');
+
+            $('#deleteCustomerName').text(customerName);
+            $('#deleteCustomerForm').attr('action', '@Url.Action("DeleteCustomer", "Admin")/' + customerId);
+
+            var deleteModalEl = document.getElementById('deleteConfirmModal');
+            var deleteModal = bootstrap.Modal.getOrCreateInstance(deleteModalEl);
+            deleteModal.show();
+        });
+    </script>
+}

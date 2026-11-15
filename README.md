@@ -1,0 +1,228 @@
+# Pharmacy Management System
+
+A full-stack, responsive Pharmacy Management System built with ASP.NET Core MVC, Entity Framework Core, SQL Server, HTML, CSS and JavaScript. The application provides authentication, role-based access control, medicine and category management, stock management, advanced prescription handling with AI-powered (prescription reading via the Groq API), purchasing, shopping cart, checkout, customer management, and an administrative dashboard.
+
+## Features
+
+* **Authentication & Authorization**
+
+  * ASP.NET Core Identity integration
+  * Role-based access control with `Admin` and `Customer` roles
+  * Login and registration
+  * Access-denied handling
+
+* **Role-Based Access Control**
+
+  * Administrative access for pharmacy management
+  * Protected routes and authorization policies
+  * Separate customer and admin functionality
+
+* **Medicine Management**
+
+  * Create, read, update, and delete medicines
+  * Medicine details and information management
+  * Category-based organization
+
+* **Category Management**
+
+  * Create and manage medicine categories
+  * Organize medicines for easier browsing
+
+* **Stock Management**
+
+  * Monitor medicine stock
+  * Add and update stock information
+  * Track available quantities
+  * Admin sales and stock overview
+
+* **Prescription Management**
+
+  * Customers can upload prescriptions
+  * Admin can review uploaded prescriptions
+  * Prescription records and management
+  * Advanced prescription reading with AI-powered via the Groq API
+
+* **Checkout**
+
+  * Add medicines to cart
+  * Update and remove cart items
+  * Checkout functionality
+  * Purchase and purchase-item management
+
+* **Customer Management**
+
+  * Customer registration and account management
+  * Customer purchase history
+  * Personal prescription and purchase information
+
+* **Admin Dashboard**
+
+  * Centralized pharmacy management dashboard
+  * Medicine and stock overview
+  * Customer purchase history
+  * Prescription management
+  * Sales and inventory information
+
+* **ViewModel-Based Architecture**
+
+  * Dedicated ViewModels for forms and UI operations
+  * Separates user input from application entities
+  * Supports cleaner model binding and validation
+
+* **Responsive UI**
+
+  * Razor Views with Bootstrap
+  * Custom CSS and JavaScript
+  * Responsive layouts for different screen sizes
+
+## Architecture
+
+Pharmacy Management System follows the **Model-View-Controller (MVC)** architectural pattern.
+<img src="images/pharmacy-architecture.png" alt="Pharmacy Management System Architecture" width="500"><img width="900" height="500" alt="image" src="https://github.com/user-attachments/assets/7f3318a2-5362-4adc-bf80-6e5d0bc33a80" />
+
+
+### Architecture Overview
+
+**Controllers**
+Handle HTTP requests, application flow, authorization, and communication between Views, ViewModels, Identity, and the database.
+**ViewModels**
+Provide dedicated models for operations such as customer registration, login, medicine creation/editing, prescription uploading, purchases, cart operations, and stock management.
+
+**Entity Framework Core**
+Provides database access through `AppDbContext` and manages the application's data model and migrations.
+
+**ASP.NET Core Identity**
+Handles authentication, authorization, roles, password management, and account-related functionality.
+
+**Razor Views**
+Provide the presentation layer using Razor, HTML, CSS, JavaScript, Bootstrap, and custom UI components.
+
+## Project Structure
+<img src="images/pharmacy-structure.png" alt="Pharmacy Management System Structure" width="500"> <img width="1024" height="559" alt="image" src="https://github.com/user-attachments/assets/cffcabe9-d362-4373-802f-16d34a259e1e" />
+
+
+
+## Prerequisites
+
+Make sure the following are installed:
+
+* [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+* SQL Server, SQL Server Express, or SQL Server LocalDB
+* Visual Studio 2026 or VS Code with the C# Dev Kit
+* Entity Framework Core CLI (`dotnet-ef`)
+> **Target Framework:** `.NET 10`
+> **Install From Manage NutGet Packages:**
+  Microsoft.AspNetCore.Identity.EntityFrameworkCore Version="10.0.0" 
+  Microsoft.EntityFrameworkCore.SqlServer Version="10.0.0"
+  Microsoft.EntityFrameworkCore.Tools" Version="10.0.0"
+
+## Getting Started
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/maksudfix/Pharmacy-Management-System.git
+cd Pharmacy-Management-System
+```
+
+### 2. Configure the Database
+
+Update the connection string in `appsettings.json` according to your SQL Server environment.
+,
+  "AllowedHosts": "*",
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=HP-TREX\\SQLEXPRESS; Database = pharmacy_db; Trusted_Connection = True; TrustServerCertificate = True;"
+  },
+  "GroqSettings": {
+    "ApiKey": "Groq API Key"
+  }
+}
+
+### 3. Apply Entity Framework Migrations
+
+To create a new migration:
+
+```powershell
+Add-Migration Initial
+```
+
+To apply the migration:
+
+```powershell
+Update-Database
+```
+
+Or using the .NET CLI:
+
+```bash
+dotnet ef database update
+```
+
+### 4. Run the Application
+dotnet run
+
+## 5. Groq Api Key
+https://console.groq.com/keys
+
+## 6. Admin Account
+The admin password is **not** stored in the source code. Set it with .NET user-secrets (stored on your PC, outside the project folder):
+
+```bash
+cd PharmacyManagement
+dotnet user-secrets set "AdminSettings:Password" "<your-strong-password>"
+```
+
+On startup the app creates the admin account (`AdminSettings:Email`, default `admin@gmail.com`) if it doesn't exist,
+and updates its password to match `AdminSettings:Password`. To change the admin password, set a new value and restart the app.
+In production, set `AdminSettings__Password` as an environment variable instead.
+
+Passwords (for customers and the admin) must be at least 6 characters and contain an uppercase letter, a lowercase letter, a number and a symbol.
+
+After 5 wrong passwords in a row, an account is locked for 15 minutes.
+
+## Project Goals
+
+Pharmacy Management System was built to demonstrate practical experience with:
+
+* ASP.NET Core MVC application development
+* C# and object-oriented programming
+* Entity Framework Core
+* SQL Server database integration
+* ASP.NET Core Identity
+* Authentication and authorization
+* Role-based access control
+* CRUD operations
+* Medicine and category management
+* Stock and inventory management
+* Prescription management
+* Shopping cart and checkout functionality
+* Purchase and sales management
+* ViewModels and model binding
+* Razor Views
+* Database migrations
+* File/Image upload functionality
+* Prescription reading with AI-powered via the Groq API
+* Responsive web development
+
+## Future Improvements
+
+* **Customer Message Box**
+  * Add a messaging system between customers and pharmacy administrators
+  * Allow customers to ask questions about medicines, prescriptions, orders, and purchases
+  * Provide an admin interface for managing customer conversations
+
+* **Architecture & Clean Code**
+  * Refactor controllers to follow SOLID principles
+  * Add centralized exception handling
+  * Implement structured logging
+  * Improve service-layer architecture
+
+* **Performance & Scale**
+  * Implement caching
+  * Optimize database queries
+  * Add pagination for large datasets
+  * Improve inventory and search performance
+
+## Author
+git clone https://github.com/Jobyadul-Islam/Pharmacy_Management_System.git
+cd Pharmacy_Management_System

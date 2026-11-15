@@ -1,0 +1,199 @@
+@model PharmacyManagement.Models.ViewModels.Cart.CartPageViewModel
+
+@{
+    ViewData["Title"] = "My Cart";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold mb-0">My Cart</h2>
+    <a asp-controller="Home" asp-action="Index" class="btn btn-outline-primary rounded-pill">Continue Shopping</a>
+</div>
+
+@if (TempData["CartMessage"] is string cartMessage)
+{
+    <div class="alert alert-success">@cartMessage</div>
+}
+@if (TempData["CartError"] is string cartError)
+{
+    <div class="alert alert-warning">@cartError</div>
+}
+
+@if (!Model.Items.Any())
+{
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-body p-5 text-center">
+            <p class="text-muted mb-3">Your cart is empty.</p>
+            <a asp-controller="Home" asp-action="Index" class="btn btn-primary rounded-pill px-4">Browse Medicines</a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row">
+        <div class="col-lg-8 mb-4">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-body p-4">
+                    <form asp-action="Update" method="post" id="cartForm">
+                        <div class="table-responsive">
+                            <table class="table align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Medicine</th>
+                                        <th>Unit Price</th>
+                                        <th style="width: 120px;">Quantity</th>
+                                        <th class="text-end">Subtotal</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.Items)
+                                    {
+                                        var maxQty = Math.Max(1, Math.Min(item.StockLimit, 100));
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    @if (!string.IsNullOrEmpty(item.ImageUrl))
+                                                    {
+                                                        <img src="@item.ImageUrl" alt="" style="width: 48px; height: 48px; object-fit: contain;" class="me-3 rounded bg-light" />
+                                                    }
+                                                    <div>
+                                                        <strong>@item.MedicineName</strong>
+                                                        @if (!string.IsNullOrEmpty(item.Strength))
+                                                        {
+                                                            <span class="text-muted">(@item.Strength)</span>
+                                                        }
+                                                        @if (item.RequiresPrescription)
+                                                        {
+                                                            <br /><span class="badge bg-info text-dark">Prescription required</span>
+                                                        }
+                                                        @if (item.Problem != null)
+                                                        {
+                                                            <br /><small class="text-danger">@item.Problem</small>
+                                                        }
+                                                        else
+                                                        {
+                                                            <br /><small class="text-muted">In stock: @item.StockLimit</small>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>BDT @item.UnitPrice.ToString("0.00")</td>
+                                            <td>
+                                                <input type="number" name="quantities[@item.MedicineId]" value="@item.Quantity"
+                                                       min="0" max="@maxQty" step="1" class="form-control form-control-sm cart-qty"
+                                                       data-unit-price="@item.UnitPrice.ToString(System.Globalization.CultureInfo.InvariantCulture)" />
+                                            </td>
+                                            <td class="text-end fw-bold line-total">BDT @item.TotalPrice.ToString("0.00")</td>
+                                            <td class="text-end">
+                                                <button type="submit" asp-action="Remove" name="medicineId" value="@item.MedicineId"
+                                                        class="cart-remove" title="Remove" aria-label="Remove @item.MedicineName">
+                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                         stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                                                        <line x1="6" y1="6" x2="18" y2="18" />
+                                                        <line x1="18" y1="6" x2="6" y2="18" />
+                                                    </svg>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <button type="submit" asp-action="Clear" class="btn btn-outline-secondary btn-sm rounded-pill"
+                                    onclick="return confirm('Remove all items from your cart?');">Empty Cart</button>
+                            <button type="submit" class="btn btn-outline-primary btn-sm rounded-pill">Update Cart</button>
+                        </div>
+                        <small class="text-muted d-block mt-2">Change quantities and press "Update Cart". Set a quantity to 0 to remove an item.</small>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3">Order Summary</h5>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Items</span>
+                        <span id="summaryQty">@Model.TotalQuantity</span>
+                    </div>
+                    <hr />
+                    <div class="d-flex justify-content-between mb-3">
+                        <h5 class="fw-bold mb-0">Grand Total</h5>
+                        <h5 class="fw-bold text-success mb-0" id="grandTotal">BDT @Model.GrandTotal.ToString("0.00")</h5>
+                    </div>
+
+                    @if (Model.NeedsPrescription)
+                    {
+                        <p class="small text-muted">Some items need a prescription. You'll be asked to attach one at checkout.</p>
+                    }
+
+                    @if (Model.CanCheckout)
+                    {
+                        <a asp-controller="Customer" asp-action="Checkout" class="btn btn-success w-100 rounded-pill py-2" id="checkoutButton">Proceed to Checkout</a>
+                    }
+                    else
+                    {
+                        <button class="btn btn-secondary w-100 rounded-pill py-2" disabled>Proceed to Checkout</button>
+                        <small class="text-danger d-block mt-2">Fix the items marked in red to continue.</small>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <style>
+        /* Simple "X" remove icon: no box, grey, turns red on hover. */
+        .cart-remove {
+            background: none;
+            border: none;
+            padding: 4px;
+            color: #9aa0a6;
+            line-height: 0;
+            cursor: pointer;
+            transition: color .15s;
+        }
+        .cart-remove:hover,
+        .cart-remove:focus-visible {
+            color: #dc3545;
+        }
+    </style>
+
+    <script>
+        // Live preview of totals while quantities are being changed (the server recalculates everything).
+        document.addEventListener("DOMContentLoaded", function () {
+            const inputs = document.querySelectorAll(".cart-qty");
+            const checkoutButton = document.getElementById("checkoutButton");
+
+            function refresh() {
+                let total = 0, count = 0;
+                inputs.forEach(input => {
+                    const max = parseInt(input.max) || 0;
+                    let qty = parseInt(input.value) || 0;
+                    if (qty < 0) qty = 0;
+                    if (qty > max) { qty = max; input.value = max; }
+
+                    const lineTotal = qty * (parseFloat(input.dataset.unitPrice) || 0);
+                    input.closest("tr").querySelector(".line-total").textContent = "BDT " + lineTotal.toFixed(2);
+                    total += lineTotal;
+                    count += qty;
+                });
+                document.getElementById("grandTotal").textContent = "BDT " + total.toFixed(2);
+                document.getElementById("summaryQty").textContent = count;
+            }
+
+            inputs.forEach(input => input.addEventListener("input", function () {
+                refresh();
+                // Unsaved changes: make the customer press "Update Cart" before checking out.
+                if (checkoutButton) {
+                    checkoutButton.classList.add("disabled");
+                    checkoutButton.textContent = "Update Cart first";
+                }
+            }));
+        });
+    </script>
+}

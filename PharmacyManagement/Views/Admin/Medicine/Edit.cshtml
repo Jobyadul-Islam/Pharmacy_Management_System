@@ -1,0 +1,100 @@
+﻿@model PharmacyManagement.Models.ViewModels.Medicine.MedicineEditViewModel
+
+@{
+    ViewData["Title"] = "Edit Medicine";
+}
+
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Edit Medicine</h1>
+    <div class="card mb-4">
+        <div class="card-body">
+            <form asp-action="Edit" enctype="multipart/form-data">
+                <input type="hidden" asp-for="MedicineId" />
+                <input type="hidden" asp-for="ImageUrl" />
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <div class="mb-3">
+                    <label asp-for="Name" class="form-label"></label>
+                    <input asp-for="Name" class="form-control" maxlength="150" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="GenericName" class="form-label">Generic Name</label>
+                    <input asp-for="GenericName" class="form-control" maxlength="150" />
+                    <span asp-validation-for="GenericName" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="BrandName" class="form-label">Brand Name</label>
+                    <input asp-for="BrandName" class="form-control" maxlength="100" />
+                    <span asp-validation-for="BrandName" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="CategoryId" class="form-label">Category</label>
+                    <select asp-for="CategoryId" asp-items="Model.Categories" class="form-control">
+                        <option value="">-- Select Category --</option>
+                    </select>
+                    <small class="text-muted">Need a new one? <a asp-controller="Category" asp-action="Create" target="_blank">Add a category</a> (opens in a new tab, then reload this page).</small>
+                    <span asp-validation-for="CategoryId" class="text-danger d-block"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="DosageForm" class="form-label">Dosage Form</label>
+                    <input asp-for="DosageForm" class="form-control" maxlength="50" placeholder="e.g., Tablet, Syrup, Capsule" />
+                    <span asp-validation-for="DosageForm" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Strength" class="form-label"></label>
+                    <input asp-for="Strength" class="form-control" maxlength="50" placeholder="e.g., 500mg" />
+                    <span asp-validation-for="Strength" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Manufacturer" class="form-label"></label>
+                    <input asp-for="Manufacturer" class="form-control" maxlength="200" />
+                    <span asp-validation-for="Manufacturer" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="ImageFile" class="form-label">Image File</label>
+                    @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                    {
+                        <div class="mb-2">
+                            <img src="@Model.ImageUrl" alt="Current image" style="max-height: 100px;" class="rounded border" />
+                            <small class="text-muted d-block">Leave empty to keep the current image.</small>
+                        </div>
+                    }
+                    <input asp-for="ImageFile" type="file" class="form-control" accept=".jpg,.jpeg,.png,.webp" />
+                    <small class="text-muted">JPG, PNG or WEBP, max 2 MB.</small>
+                    <span asp-validation-for="ImageFile" class="text-danger d-block"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Description" class="form-label"></label>
+                    <textarea asp-for="Description" class="form-control" rows="3" maxlength="1000"></textarea>
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3 form-check">
+                    <input asp-for="IsPrescriptionRequired" class="form-check-input" />
+                    <label asp-for="IsPrescriptionRequired" class="form-check-label">Is Prescription Required</label>
+                </div>
+
+                <div class="mb-3 form-check">
+                    <input asp-for="IsActive" class="form-check-input" />
+                    <label asp-for="IsActive" class="form-check-label">Active (visible to customers)</label>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Update</button>
+                <a asp-action="Medicines" class="btn btn-secondary">Back to List</a>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
